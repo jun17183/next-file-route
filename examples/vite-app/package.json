@@ -1,0 +1,19 @@
+{
+  "name": "next-file-route-example-vite",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "next-file-route sync",
+    "dev": "vite",
+    "build": "next-file-route sync && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "next-file-route": "file:../..",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

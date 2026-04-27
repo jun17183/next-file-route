@@ -1,0 +1,103 @@
+{
+  "name": "next-file-route",
+  "version": "0.1.0",
+  "description": "Per-file route declaration for Next.js App Router",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.cjs"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.mjs",
+      "require": "./dist/plugin.cjs"
+    },
+    "./.generated/manifest": {
+      "types": "./.generated/manifest.d.ts",
+      "import": "./.generated/manifest.mjs",
+      "require": "./.generated/manifest.mjs",
+      "default": "./.generated/manifest.mjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "server": [
+        "./dist/server.d.ts"
+      ],
+      "plugin": [
+        "./dist/plugin.d.ts"
+      ]
+    }
+  },
+  "bin": {
+    "next-file-route": "dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    ".generated",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:smoke": "node scripts/smoke.mjs",
+    "test:smoke:vite": "node scripts/smoke-vite.mjs",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "next": ">=14.0.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": false
+    }
+  },
+  "dependencies": {
+    "@swc/core": "^1.7.0",
+    "cac": "^6.7.14",
+    "chokidar": "^4.0.0",
+    "fast-glob": "^3.3.3"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.7.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/webpack": "^5.28.5",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0",
+    "zod": "^4.3.6"
+  },
+  "keywords": [
+    "next",
+    "nextjs",
+    "router",
+    "file-route",
+    "type-safe",
+    "app-router"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jun17183/next-file-route.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
