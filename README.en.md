@@ -1,5 +1,7 @@
 # next-file-route
 
+[![npm](https://img.shields.io/npm/v/next-file-route.svg)](https://www.npmjs.com/package/next-file-route) [![license](https://img.shields.io/npm/l/next-file-route.svg)](./LICENSE)
+
 File-based routing for Next.js App Router. Declare route data with `route()` inside `page.tsx` / `layout.tsx` — it gets statically extracted at build time and is readable from anywhere.
 
 > 한국어: [README.md](./README.md)

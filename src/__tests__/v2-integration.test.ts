@@ -44,10 +44,13 @@ describe('scanner + codegen integration with route() fixtures', () => {
   it('generates .d.ts with one RouteMap entry per route', () => {
     const result = scanRoutes({ root: FIXTURES_V2 })
 
-    const dts = emitRouteTypes(result.routeToFile)
+    const dts = emitRouteTypes(result.routeToFile, result.manifest.routes)
 
-    expect(dts).toContain('"/": Record<string, unknown>')
-    expect(dts).toContain('"/products": Record<string, unknown>')
+    expect(dts).toContain('"/": {')
+    expect(dts).toContain('"/products": {')
+    expect(dts).toContain('readonly title: "Home"')
+    expect(dts).toContain('readonly title: "Products"')
+    expect(dts).toContain('readonly search: unknown')
   })
 
   it('routes without a search schema have no entry in searchRoutes', () => {

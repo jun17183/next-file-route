@@ -103,7 +103,7 @@ function writeOutputs(root: string, state: WritableManifestState) {
   const dir = resolve(root, GENERATED_REL_DIR)
   mkdirSync(dir, { recursive: true })
 
-  writeFileSync(resolve(dir, 'routes.d.ts'), emitRouteTypes(state.routeToFile), 'utf-8')
+  writeFileSync(resolve(dir, 'routes.d.ts'), emitRouteTypes(state.routeToFile, state.manifest.routes), 'utf-8')
 
   const manifestSrc = emitManifestModule(state.manifest, {
     searchRoutes: state.searchRoutes,

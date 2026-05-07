@@ -1,5 +1,7 @@
 # next-file-route
 
+[![npm](https://img.shields.io/npm/v/next-file-route.svg)](https://www.npmjs.com/package/next-file-route) [![license](https://img.shields.io/npm/l/next-file-route.svg)](./LICENSE)
+
 Next.js App Router용 파일 기반 라우팅. `page.tsx` / `layout.tsx`에 `route()`로 라우트 데이터를 적으면 빌드 시 정적 추출해서 어디서든 읽을 수 있다.
 
 > English: [README.en.md](./README.en.md)

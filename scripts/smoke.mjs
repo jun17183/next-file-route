@@ -64,17 +64,19 @@ const expectedDtsRoutes = [
   '"/products"',
 ]
 for (const path of expectedDtsRoutes) {
-  assert(
-    dts.includes(`${path}: Record<string, unknown>`),
-    `RouteMap entry for ${path}`,
-  )
+  assert(dts.includes(`${path}: {`), `RouteMap entry for ${path}`)
 }
-assert(
-  !dts.includes('"/admin": Record<string, unknown>'),
-  '/admin (layout-only) absent from RouteMap',
-)
+assert(!dts.includes('"/admin":'), '/admin (layout-only) absent from RouteMap')
 assert(dts.includes("declare module 'next-file-route'"), 'declares next-file-route module')
 assert(dts.includes('interface RouteMap'), 'declares RouteMap interface')
+
+// Phase 1 — literal types should land in the .d.ts.
+assert(dts.includes('readonly title: "Users"'), '/admin/users meta.title literal')
+assert(
+  dts.includes('readonly roles: readonly ["admin", "manager"]'),
+  '/admin/users meta.roles readonly tuple',
+)
+assert(dts.includes('readonly search: unknown'), '/products search marker emitted as unknown')
 
 section('manifest.mjs contents')
 const manifestPath = resolve(generatedDir, 'manifest.mjs')
