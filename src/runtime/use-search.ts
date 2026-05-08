@@ -4,9 +4,9 @@ import { useSearchParams, usePathname } from 'next/navigation'
 import { useMemo } from 'react'
 import { getSearchSchema, getRoutePath } from './manifest'
 import { coerceSearchParams } from '../utils/zod-coerce'
-import type { RoutePath } from '../types'
+import type { RoutePath, SearchOf } from '../types'
 
-export function useSearch<P extends RoutePath = RoutePath>(path?: P) {
+export function useSearch<P extends RoutePath = RoutePath>(path?: P): SearchOf<P> {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 

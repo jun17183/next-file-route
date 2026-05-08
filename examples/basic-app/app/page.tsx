@@ -1,6 +1,6 @@
 import { route, getRoutes } from 'next-file-route/server'
 
-const r = route({
+export const r = route({
   meta: {
     title: 'Home',
     description: 'Welcome to the example app.',

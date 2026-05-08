@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { route } from 'next-file-route/server'
 
-const r = route({
+export const r = route({
   meta: {
     title: 'Admin',
     section: 'admin',

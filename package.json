@@ -1,6 +1,6 @@
 {
   "name": "next-file-route",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "File-based routing for Next.js App Router. Declare route data inline in page.tsx/layout.tsx.",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 import { route } from 'next-file-route/server'
 
-route({
+export const r = route({
   meta: {
     title: 'Home',
     section: 'public',

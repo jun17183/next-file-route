@@ -10,7 +10,7 @@ import type {
   ExprOrSpread,
 } from '@swc/core'
 import { collectZodIdentifiers, isZodCallExpression } from './extract-zod'
-import { collectRouteIdentifiers, findRouteCallArgument } from './extract-call'
+import { collectRouteIdentifiers, findRouteCallInfo } from './extract-call'
 
 export interface ExtractionWarning {
   file: string
@@ -28,6 +28,7 @@ export interface ExtractionResult {
   warnings: ExtractionWarning[]
   hasSearch: boolean
   searchSource: string | null
+  exportedName: string | null
 }
 
 interface ExtractorContext {
@@ -58,11 +59,18 @@ export function extractRouteCall(
   }
 
   const routeIdentifiers = collectRouteIdentifiers(ast)
-  const callArg = findRouteCallArgument(ast, routeIdentifiers)
-  if (!callArg) {
-    return { value: null, warnings, hasSearch: false, searchSource: null }
+  const info = findRouteCallInfo(ast, routeIdentifiers)
+  if (!info) {
+    return {
+      value: null,
+      warnings,
+      hasSearch: false,
+      searchSource: null,
+      exportedName: null,
+    }
   }
 
+  const { arg: callArg, exportedName } = info
   const value = evaluateExpression(callArg, '', ctx)
   if (value !== undefined && typeof value === 'object' && value !== null && !Array.isArray(value)) {
     const obj = value as Record<string, unknown>
@@ -70,7 +78,18 @@ export function extractRouteCall(
     const searchSource = hasSearch
       ? sliceSearchSource(callArg, source, ast.span?.start ?? 0)
       : null
-    return { value: obj, warnings, hasSearch, searchSource }
+    if (hasSearch && !exportedName) {
+      const loc = ctx.locate((callArg as { span?: { start: number } }).span?.start ?? 0)
+      warnings.push({
+        file: filePath,
+        line: loc.line,
+        column: loc.column,
+        field: 'route()',
+        message: 'route() has a search schema but the result is not exported.',
+        hint: 'Change `const r = route(...)` to `export const r = route(...)` so useSearch() can infer the Zod type. Without an export, search params will be typed as `unknown`.',
+      })
+    }
+    return { value: obj, warnings, hasSearch, searchSource, exportedName }
   }
 
   const loc = ctx.locate((callArg as { span?: { start: number } }).span?.start ?? 0)
@@ -82,7 +101,13 @@ export function extractRouteCall(
     message: 'route() argument must be an object literal expression.',
     hint: 'Use `route({ meta: { title: "..." } })`',
   })
-  return { value: null, warnings, hasSearch: false, searchSource: null }
+  return {
+    value: null,
+    warnings,
+    hasSearch: false,
+    searchSource: null,
+    exportedName: null,
+  }
 }
 
 function sliceSearchSource(

@@ -23,10 +23,15 @@ export function collectRouteIdentifiers(ast: Module): Set<string> {
   return idents
 }
 
-export function findRouteCallArgument(
+export interface RouteCallInfo {
+  arg: Expression
+  exportedName: string | null
+}
+
+export function findRouteCallInfo(
   ast: Module,
   routeIdentifiers: Set<string>,
-): Expression | null {
+): RouteCallInfo | null {
   for (const item of ast.body) {
     const found = findInTopLevelItem(item, routeIdentifiers)
     if (found) return found
@@ -34,15 +39,20 @@ export function findRouteCallArgument(
   return null
 }
 
+interface SearchHit {
+  arg: Expression
+  direct: boolean
+}
+
 function findInTopLevelItem(
   item: ModuleItem,
   routeIdentifiers: Set<string>,
-): Expression | null {
+): RouteCallInfo | null {
   if (item.type === 'VariableDeclaration' && item.kind === 'const') {
     for (const d of item.declarations) {
       if (d.init) {
-        const found = findInExpression(d.init, routeIdentifiers)
-        if (found) return found
+        const hit = findInExpression(d.init, routeIdentifiers)
+        if (hit) return { arg: hit.arg, exportedName: null }
       }
     }
     return null
@@ -54,14 +64,19 @@ function findInTopLevelItem(
   ) {
     for (const d of item.declaration.declarations) {
       if (d.init) {
-        const found = findInExpression(d.init, routeIdentifiers)
-        if (found) return found
+        const hit = findInExpression(d.init, routeIdentifiers)
+        if (hit) {
+          const name =
+            hit.direct && d.id.type === 'Identifier' ? d.id.value : null
+          return { arg: hit.arg, exportedName: name }
+        }
       }
     }
     return null
   }
   if (item.type === 'ExpressionStatement') {
-    return findInExpression(item.expression, routeIdentifiers)
+    const hit = findInExpression(item.expression, routeIdentifiers)
+    if (hit) return { arg: hit.arg, exportedName: null }
   }
   return null
 }
@@ -69,19 +84,33 @@ function findInTopLevelItem(
 function findInExpression(
   expr: Expression,
   routeIdentifiers: Set<string>,
-): Expression | null {
+): SearchHit | null {
   if (expr.type === 'CallExpression') {
     const callee = expr.callee
     if (callee.type === 'Identifier' && routeIdentifiers.has(callee.value)) {
       const first = expr.arguments[0]
-      return first && !first.spread ? (first.expression as Expression) : null
+      if (!first || first.spread) return null
+      return { arg: first.expression as Expression, direct: true }
     }
   }
   if (expr.type === 'MemberExpression') {
-    return findInExpression(expr.object as Expression, routeIdentifiers)
+    const inner = findInExpression(expr.object as Expression, routeIdentifiers)
+    if (inner) return { arg: inner.arg, direct: false }
   }
   if (expr.type === 'ParenthesisExpression') {
     return findInExpression(expr.expression, routeIdentifiers)
+  }
+  if (
+    expr.type === 'TsAsExpression' ||
+    expr.type === 'TsSatisfiesExpression' ||
+    expr.type === 'TsConstAssertion' ||
+    expr.type === 'TsNonNullExpression' ||
+    expr.type === 'TsTypeAssertion'
+  ) {
+    return findInExpression(
+      (expr as { expression: Expression }).expression,
+      routeIdentifiers,
+    )
   }
   return null
 }

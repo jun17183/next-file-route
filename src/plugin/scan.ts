@@ -119,6 +119,7 @@ export function scanRouteFile(
         ],
         hasSearch: false,
         searchSource: null,
+        exportedName: null,
       },
     }
   }

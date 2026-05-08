@@ -237,4 +237,73 @@ describe('emitRouteTypes', () => {
 
     expect(dts).toContain('readonly meta: Record<string, unknown>;')
   })
+
+  it('emits search as `unknown` when there is no exportedName', () => {
+    const routeToFile = new Map([['/products', 'app/products/page.tsx']])
+    const routeValues = {
+      '/products': { meta: { title: 'Products' }, search: '__ZOD_SCHEMA__' },
+    }
+
+    const dts = emitRouteTypes(routeToFile, routeValues)
+
+    expect(dts).toContain('readonly search: unknown;')
+    expect(dts).not.toContain('typeof import')
+  })
+
+  it('emits search as `typeof import(...)[name]["search"]` when exported', () => {
+    const routeToFile = new Map([['/products', 'app/products/page.tsx']])
+    const routeValues = {
+      '/products': { meta: { title: 'Products' }, search: '__ZOD_SCHEMA__' },
+    }
+    const exportedNames = new Map([['/products', 'r']])
+
+    const dts = emitRouteTypes(routeToFile, routeValues, { exportedNames })
+
+    expect(dts).toContain(
+      'readonly search: typeof import("../../../app/products/page")["r"]["search"];',
+    )
+    expect(dts).toContain('readonly title: "Products";')
+  })
+
+  it('drops .tsx extension from the import path', () => {
+    const routeToFile = new Map([['/x', 'app/x/page.tsx']])
+    const routeValues = { '/x': { search: '__ZOD_SCHEMA__' } }
+    const exportedNames = new Map([['/x', 'r']])
+
+    const dts = emitRouteTypes(routeToFile, routeValues, { exportedNames })
+
+    expect(dts).toContain('"../../../app/x/page"')
+    expect(dts).not.toContain('page.tsx')
+  })
+
+  it('handles dynamic-segment paths in import path (square brackets pass through)', () => {
+    const routeToFile = new Map([
+      ['/posts/[id]', 'app/posts/[id]/page.tsx'],
+    ])
+    const routeValues = { '/posts/[id]': { search: '__ZOD_SCHEMA__' } }
+    const exportedNames = new Map([['/posts/[id]', 'r']])
+
+    const dts = emitRouteTypes(routeToFile, routeValues, { exportedNames })
+
+    expect(dts).toContain('"../../../app/posts/[id]/page"')
+  })
+
+  it('uses the user-provided export name (not just "r")', () => {
+    const routeToFile = new Map([['/x', 'app/x/page.tsx']])
+    const routeValues = { '/x': { search: '__ZOD_SCHEMA__' } }
+    const exportedNames = new Map([['/x', 'myRoute']])
+
+    const dts = emitRouteTypes(routeToFile, routeValues, { exportedNames })
+
+    expect(dts).toContain('["myRoute"]["search"]')
+  })
+
+  it('does not emit a search field when the route has no search schema', () => {
+    const routeToFile = new Map([['/', 'app/page.tsx']])
+    const routeValues = { '/': { meta: { title: 'Home' } } }
+
+    const dts = emitRouteTypes(routeToFile, routeValues)
+
+    expect(dts).not.toContain('search')
+  })
 })

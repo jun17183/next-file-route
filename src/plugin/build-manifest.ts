@@ -14,6 +14,7 @@ export interface ManifestData {
   layoutToFile: Map<string, string>
   searchRoutes: Set<string>
   callSearchSources: Map<string, string>
+  exportedNames: Map<string, string>
 }
 
 export function buildManifest(extractions: Extraction[]): ManifestData {
@@ -22,6 +23,7 @@ export function buildManifest(extractions: Extraction[]): ManifestData {
   const layoutToFile = new Map<string, string>()
   const searchRoutes = new Set<string>()
   const callSearchSources = new Map<string, string>()
+  const exportedNames = new Map<string, string>()
 
   for (const e of extractions) {
     if (!e.result.value) continue
@@ -32,6 +34,9 @@ export function buildManifest(extractions: Extraction[]): ManifestData {
       if (e.result.hasSearch && e.result.searchSource) {
         searchRoutes.add(e.routePath)
         callSearchSources.set(e.routePath, e.result.searchSource)
+      }
+      if (e.result.exportedName) {
+        exportedNames.set(e.routePath, e.result.exportedName)
       }
     } else {
       manifest.layouts[e.routePath] = e.result.value
@@ -45,5 +50,6 @@ export function buildManifest(extractions: Extraction[]): ManifestData {
     layoutToFile,
     searchRoutes,
     callSearchSources,
+    exportedNames,
   }
 }

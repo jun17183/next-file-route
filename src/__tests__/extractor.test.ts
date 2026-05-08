@@ -191,7 +191,6 @@ describe('extractRouteCall', () => {
         search: ZOD_SCHEMA_MARKER,
       })
       expect(result.hasSearch).toBe(true)
-      expect(result.warnings).toHaveLength(0)
     })
 
     it('detects chained Zod methods', () => {
@@ -222,7 +221,6 @@ describe('extractRouteCall', () => {
       )
       expect(result.value?.search).toBe(ZOD_SCHEMA_MARKER)
       expect(result.hasSearch).toBe(true)
-      expect(result.warnings).toHaveLength(0)
     })
 
     it('detects Zod when imported as default', () => {
@@ -278,6 +276,102 @@ describe('extractRouteCall', () => {
         `import { route } from 'next-file-route/server'\nexport const generateMetadata = route({ meta: { title: 'Chained' } }).generateMetadata`,
       )
       expect(result.value).toEqual({ meta: { title: 'Chained' } })
+    })
+
+    it('reports exportedName for `export const r = route(...)`', () => {
+      const result = parseAndExtract(
+        `import { route } from 'next-file-route/server'\nexport const r = route({ meta: { title: 'X' } })`,
+      )
+      expect(result.exportedName).toBe('r')
+    })
+
+    it('reports exportedName for any user-chosen name', () => {
+      const result = parseAndExtract(
+        `import { route } from 'next-file-route/server'\nexport const myRoute = route({ meta: { title: 'X' } })`,
+      )
+      expect(result.exportedName).toBe('myRoute')
+    })
+
+    it('reports null exportedName for an un-exported `const r = route(...)`', () => {
+      const result = parseAndExtract(
+        `import { route } from 'next-file-route/server'\nconst r = route({ meta: { title: 'X' } })`,
+      )
+      expect(result.exportedName).toBeNull()
+    })
+
+    it('reports null exportedName for a bare top-level route() call', () => {
+      const result = parseAndExtract(
+        `import { route } from 'next-file-route/server'\nroute({ meta: { title: 'X' } })`,
+      )
+      expect(result.exportedName).toBeNull()
+    })
+
+    it('reports null exportedName when the export goes through a member access', () => {
+      // export const generateMetadata = route({...}).generateMetadata
+      // → the export points at the chained property, not at the route handle
+      const result = parseAndExtract(
+        `import { route } from 'next-file-route/server'\nexport const generateMetadata = route({ meta: { title: 'X' } }).generateMetadata`,
+      )
+      expect(result.exportedName).toBeNull()
+    })
+
+    it('extracts through `as Type` cast', () => {
+      const result = parseAndExtract(
+        `import { route } from 'next-file-route/server'\nexport const r = route({ meta: { title: 'Cast' } }) as never`,
+      )
+      expect(result.value).toEqual({ meta: { title: 'Cast' } })
+      expect(result.exportedName).toBe('r')
+    })
+
+    it('extracts through `satisfies Type`', () => {
+      const result = parseAndExtract(
+        `import { route } from 'next-file-route/server'\nexport const r = route({ meta: { title: 'Sat' } }) satisfies object`,
+      )
+      expect(result.value).toEqual({ meta: { title: 'Sat' } })
+      expect(result.exportedName).toBe('r')
+    })
+
+    it('warns when search is declared but route is not exported', () => {
+      const source = `
+        import { route } from 'next-file-route/server'
+        import { z } from 'zod'
+        const r = route({ search: z.object({ page: z.number() }) })
+      `
+      const result = parseAndExtract(source)
+      expect(result.hasSearch).toBe(true)
+      expect(result.exportedName).toBeNull()
+      const matched = result.warnings.find((w) =>
+        w.message.includes('search schema but the result is not exported'),
+      )
+      expect(matched).toBeDefined()
+      expect(matched?.hint).toContain('export const r = route')
+    })
+
+    it('does not warn when search is exported', () => {
+      const source = `
+        import { route } from 'next-file-route/server'
+        import { z } from 'zod'
+        export const r = route({ search: z.object({ page: z.number() }) })
+      `
+      const result = parseAndExtract(source)
+      expect(result.exportedName).toBe('r')
+      const warned = result.warnings.find((w) =>
+        w.message.includes('not exported'),
+      )
+      expect(warned).toBeUndefined()
+    })
+
+    it('does not warn when there is no search schema', () => {
+      const source = `
+        import { route } from 'next-file-route/server'
+        const r = route({ meta: { title: 'Plain' } })
+      `
+      const result = parseAndExtract(source)
+      expect(result.hasSearch).toBe(false)
+      const warned = result.warnings.find((w) =>
+        w.message.includes('not exported'),
+      )
+      expect(warned).toBeUndefined()
     })
 
     it('respects an aliased import (route as r)', () => {

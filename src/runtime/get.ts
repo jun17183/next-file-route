@@ -1,6 +1,12 @@
 import { getManifestRoutes, getSearchSchema } from './manifest'
 import { coerceSearchParams } from '../utils/zod-coerce'
-import type { RoutePath, RouteEntry, RouteConfigOf, RouteMetaOf } from '../types'
+import type {
+  RoutePath,
+  RouteEntry,
+  RouteConfigOf,
+  RouteMetaOf,
+  SearchOf,
+} from '../types'
 
 export { getRoutePath } from './manifest'
 
@@ -30,17 +36,17 @@ export function getRoutes(): RouteEntry[] {
 export async function parseSearch<P extends RoutePath>(
   path: P,
   searchParams: Record<string, string | string[]> | Promise<Record<string, string | string[]>>,
-): Promise<unknown> {
+): Promise<SearchOf<P>> {
   const schema = getSearchSchema(path as string)
   if (!schema || typeof schema !== 'object' || !('parse' in (schema as any))) {
-    return {}
+    return {} as SearchOf<P>
   }
 
   const params = searchParams instanceof Promise ? await searchParams : searchParams
   const coerced = coerceSearchParams(params, schema)
 
   try {
-    return (schema as any).parse(coerced)
+    return (schema as any).parse(coerced) as SearchOf<P>
   } catch (parseErr) {
     if (process.env.NODE_ENV !== 'production') {
       console.warn(
@@ -50,9 +56,9 @@ export async function parseSearch<P extends RoutePath>(
       )
     }
     try {
-      return (schema as any).parse({})
+      return (schema as any).parse({}) as SearchOf<P>
     } catch {
-      return {}
+      return {} as SearchOf<P>
     }
   }
 }

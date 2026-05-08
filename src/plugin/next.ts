@@ -45,7 +45,13 @@ export function withFileRoute(
 function writeOutputs(root: string, state: ScanResult) {
   const dir = resolve(root, GENERATED_REL_DIR)
   mkdirSync(dir, { recursive: true })
-  writeFileSync(resolve(dir, 'routes.d.ts'), emitRouteTypes(state.routeToFile, state.manifest.routes), 'utf-8')
+  writeFileSync(
+    resolve(dir, 'routes.d.ts'),
+    emitRouteTypes(state.routeToFile, state.manifest.routes, {
+      exportedNames: state.exportedNames,
+    }),
+    'utf-8',
+  )
   writeFileSync(
     resolve(dir, 'manifest.mjs'),
     emitManifestModule(state.manifest, {

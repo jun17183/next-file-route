@@ -13,14 +13,25 @@ const GENERATED_DIR = 'node_modules/next-file-route/.generated'
 
 type WritableManifestState = Pick<
   ScanResult,
-  'manifest' | 'routeToFile' | 'layoutToFile' | 'searchRoutes' | 'callSearchSources'
+  | 'manifest'
+  | 'routeToFile'
+  | 'layoutToFile'
+  | 'searchRoutes'
+  | 'callSearchSources'
+  | 'exportedNames'
 >
 
 function writeGeneratedOutputs(root: string, state: WritableManifestState) {
   const dir = resolve(root, GENERATED_DIR)
   mkdirSync(dir, { recursive: true })
 
-  writeFileSync(resolve(dir, 'routes.d.ts'), emitRouteTypes(state.routeToFile, state.manifest.routes), 'utf-8')
+  writeFileSync(
+    resolve(dir, 'routes.d.ts'),
+    emitRouteTypes(state.routeToFile, state.manifest.routes, {
+      exportedNames: state.exportedNames,
+    }),
+    'utf-8',
+  )
 
   const manifest = emitManifestModule(state.manifest, {
     searchRoutes: state.searchRoutes,
@@ -157,6 +168,7 @@ cli
       layoutToFile: initial.layoutToFile,
       searchRoutes: initial.searchRoutes,
       callSearchSources: initial.callSearchSources,
+      exportedNames: initial.exportedNames,
     }
 
     let timer: ReturnType<typeof setTimeout> | null = null
@@ -193,11 +205,17 @@ cli
             state.searchRoutes.delete(routePath)
             state.callSearchSources.delete(routePath)
           }
+          if (result.exportedName) {
+            state.exportedNames.set(routePath, result.exportedName)
+          } else {
+            state.exportedNames.delete(routePath)
+          }
         } else {
           delete state.manifest.routes[routePath]
           state.routeToFile.delete(routePath)
           state.searchRoutes.delete(routePath)
           state.callSearchSources.delete(routePath)
+          state.exportedNames.delete(routePath)
         }
       } else {
         if (result.value) {
@@ -223,6 +241,7 @@ cli
           state.routeToFile.delete(rp)
           state.searchRoutes.delete(rp)
           state.callSearchSources.delete(rp)
+          state.exportedNames.delete(rp)
           break
         }
       }

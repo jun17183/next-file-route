@@ -1,7 +1,7 @@
 import { route } from 'next-file-route/server'
 import { z } from 'zod'
 
-const r = route({
+export const r = route({
   meta: { title: 'Products' },
   search: z.object({
     page: z.number().default(1),

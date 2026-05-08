@@ -14,6 +14,7 @@ export type {
   RouteEntry,
   RouteConfigOf,
   RouteMetaOf,
+  SearchOf,
 } from './types'
 export type {
   RouteHandle,

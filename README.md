@@ -21,7 +21,7 @@ export default withFileRoute({})
 import { route } from 'next-file-route/server'
 import { z } from 'zod'
 
-const r = route({
+export const r = route({
   meta: { title: '사용자', roles: ['admin'] },
   search: z.object({ page: z.number().default(1) }),
 })
@@ -47,6 +47,8 @@ CLI: `init` / `sync` / `watch` / `inspect`.
 
 ## 제약
 
+- `route()` 결과를 `export const r =` 으로 export하면 `useSearch()` 리턴이 Zod 추론 결과로 좁혀진다. export 안 하면 `unknown` 폴백. (`const r = route(...); export { r }` 같이 분리된 export 패턴은 미지원.)
+- 한 파일에 `route()` 호출은 하나만. 두 번째 호출은 조용히 무시된다.
 - `'use client'` 파일에서 `route()` 호출 불가. 서버 전용이라 부모 layout에 둔다.
 - `route({ search })`의 Zod는 빌드 시 verbatim 슬라이스. 인라인 literal만, 외부 const 참조 X.
 - `import { z } from 'zod'`만 가정. alias 깨짐.

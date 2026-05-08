@@ -21,7 +21,7 @@ export default withFileRoute({})
 import { route } from 'next-file-route/server'
 import { z } from 'zod'
 
-const r = route({
+export const r = route({
   meta: { title: 'Users', roles: ['admin'] },
   search: z.object({ page: z.number().default(1) }),
 })
@@ -47,6 +47,8 @@ CLI: `init` / `sync` / `watch` / `inspect`.
 
 ## Caveats
 
+- Exporting the result as `export const r = route(...)` lets `useSearch()` return the Zod-inferred type. If you don't export, search params fall back to `unknown`. (Detached `export { r }` after a `const r = route(...)` is not supported.)
+- One `route()` call per file. A second call is silently ignored.
 - `route()` cannot be called from a `'use client'` file — server-only. Put it on the parent layout.
 - The Zod in `route({ search })` is sliced verbatim at build time. Inline literals only; no references to outside consts.
 - Only `import { z } from 'zod'` is assumed. Aliased imports break extraction.

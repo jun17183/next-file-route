@@ -24,6 +24,7 @@ export class FileRouteWebpackPlugin {
   private layoutToFile = new Map<string, string>()
   private searchRoutes = new Set<string>()
   private callSearchSources = new Map<string, string>()
+  private exportedNames = new Map<string, string>()
   private watcher: FileWatcher | null = null
 
   constructor(options: FileRoutePluginOptions) {
@@ -79,6 +80,7 @@ export class FileRouteWebpackPlugin {
     this.layoutToFile = result.layoutToFile
     this.searchRoutes = result.searchRoutes
     this.callSearchSources = result.callSearchSources
+    this.exportedNames = result.exportedNames
 
     for (const w of result.warnings) {
       const loc = w.line ? `:${w.line}` : ''
@@ -100,7 +102,13 @@ export class FileRouteWebpackPlugin {
     const dir = resolve(root, GENERATED_REL_DIR)
     mkdirSync(dir, { recursive: true })
 
-    writeFileSync(resolve(dir, 'routes.d.ts'), emitRouteTypes(this.routeToFile, this.manifest.routes), 'utf-8')
+    writeFileSync(
+      resolve(dir, 'routes.d.ts'),
+      emitRouteTypes(this.routeToFile, this.manifest.routes, {
+        exportedNames: this.exportedNames,
+      }),
+      'utf-8',
+    )
 
     const manifestSrc = emitManifestModule(this.manifest, {
       searchRoutes: this.searchRoutes,
@@ -163,11 +171,17 @@ export class FileRouteWebpackPlugin {
                 this.searchRoutes.delete(routePath)
                 this.callSearchSources.delete(routePath)
               }
+              if (result.exportedName) {
+                this.exportedNames.set(routePath, result.exportedName)
+              } else {
+                this.exportedNames.delete(routePath)
+              }
             } else {
               delete this.manifest.routes[routePath]
               this.routeToFile.delete(routePath)
               this.searchRoutes.delete(routePath)
               this.callSearchSources.delete(routePath)
+              this.exportedNames.delete(routePath)
             }
           } else {
             if (result.value) {
@@ -195,6 +209,7 @@ export class FileRouteWebpackPlugin {
               this.routeToFile.delete(rp)
               this.searchRoutes.delete(rp)
               this.callSearchSources.delete(rp)
+              this.exportedNames.delete(rp)
               break
             }
           }

@@ -1,7 +1,7 @@
 import { route } from 'next-file-route/server'
 import { z } from 'zod'
 
-route({
+export const r = route({
   meta: {
     title: 'Products',
     section: 'public',
