@@ -1,28 +1,33 @@
 # next-file-route — basic example
 
-Minimal Next.js 15 app exercising every public API of the library.
+Minimal Next.js 15 app that declares route data with `route()` and reads it back.
 
 ## Routes
 
 | Path                 | Demonstrates |
 |----------------------|--------------|
-| `/`                  | `getNavTree`, `createMetadata`, declaration merging |
-| `/about`             | static `createMetadata` |
-| `/admin`             | `<Breadcrumb />`, `meta.roles` |
+| `/`                  | `getRoutes()` — renders the whole manifest |
+| `/about`             | static `meta` + `generateMetadata` |
+| `/admin`             | page without `route()`; data comes from `admin/layout.tsx` |
 | `/admin/users`       | Zod search schema + `meta.roles` |
-| `/admin/users/[id]`  | dynamic segment + RBAC inheritance |
+| `/admin/users/[id]`  | dynamic segment + `meta.roles` |
 | `/posts/[id]`        | dynamic segment + Zod search |
-| `/products`          | `parseSearch` server function |
+| `/products`          | `parseSearch()` in a server component |
+
+`app/layout.tsx` and `app/admin/layout.tsx` also call `route()` to provide default metadata.
 
 ## Run it
 
 ```bash
-npm install                # installs from the parent package via file:..
-npm run sync               # generates .generated/manifest.mjs + routes.d.ts
+npm install                # installs from the parent package via file:../..
+npm run sync               # generates the manifest + routes.d.ts
 npm run dev:webpack        # standard Next.js dev (webpack plugin auto-runs)
 npm run dev:turbopack      # standalone watcher + next dev --turbopack
-npm run build              # production build
+npm run build              # sync + production build
+npm run inspect            # print the current manifest as JSON
 ```
+
+Build the library in the repo root (`npm run build`) before installing, since the example depends on its `dist/`.
 
 > Next.js will generate `tsconfig.json` and `next-env.d.ts` on first dev run.
 
@@ -34,9 +39,9 @@ npm run build              # production build
   plugin API yet, so we run `next-file-route watch` in parallel. Both are
   combined in the `dev:turbopack` script via `&`.
 
-## Auth placeholder
+## Role checks
 
-`app/admin/layout.tsx` calls `requireRoles({ ..., userRoles })` with a stubbed
-`getCurrentUserRoles()`. Wire that to your real auth provider (NextAuth.js,
-Clerk, custom session, etc.) — the library doesn't care where the roles come
-from, only that you pass them in.
+`meta.roles` is plain data — the library doesn't enforce it. Read it with
+`getRouteMeta(getRoutePath(pathname))` and check it against your auth provider
+(NextAuth.js, Clerk, custom session, etc.). See "Role checks by path" in the
+[main README](../../README.md#role-checks-by-path).

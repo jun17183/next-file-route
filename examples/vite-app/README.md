@@ -4,7 +4,7 @@ Minimal Vite project that exercises the `fileRouteVite()` plugin end-to-end.
 
 There are no React pages here on purpose — the goal is to verify that:
 
-1. The plugin scans `app/**/{page,layout}.meta.{ts,tsx,js,jsx}`
+1. The plugin scans `app/**/{page,layout}.{ts,tsx,js,jsx}` for `route()` calls
 2. It writes the manifest + `routes.d.ts` to `node_modules/next-file-route/.generated/`
 3. The bundler resolves `next-file-route/.generated/manifest` via the alias
 4. Search-schema imports resolve to live Zod instances (not strings)
